@@ -25,39 +25,58 @@
 
 ## 2. 폴더 구조
 
+> **★ 본 프로젝트는 VHDL 과 Verilog 두 버전을 모두 제공한다.**
+> 동작·인터페이스·시뮬레이션 결과는 100% 동일하며, `src/<언어>/`, `testbench/<언어>/` 폴더로 분리되어 있다.
+
 ```
 장현석_FND_프로젝트/
 ├── README.md                       ← (지금 보고 있는 파일) 전체 안내
 │
-├── docs/                           ← 이론 정리 (마크다운)
+├── docs/                           ← 이론 정리 (마크다운, 언어 공통)
 │   ├── 01_프로젝트_개요와_나의_역할.md
 │   ├── 02_FND_하드웨어_기초.md
 │   ├── 03_7세그먼트_디코더_이론.md
 │   ├── 04_시분할_멀티플렉싱_이론.md
 │   ├── 05_마스킹과_FSM연동_이론.md
-│   ├── 06_VHDL_모듈_상세_설명.md
+│   ├── 06_VHDL_모듈_상세_설명.md   ← 코드 한줄한줄 해설 (VHDL 기준, Verilog 도 구조 동일)
 │   └── 07_통합과_인터페이스_명세.md
 │
-├── src/                            ← 합성 대상 VHDL (Quartus에 추가할 파일)
-│   ├── seg7_decoder.vhd            ← 4-bit BCD → 7-Seg 패턴 디코더
-│   ├── clk_divider.vhd             ← 1MHz → 1kHz 스캔 클럭 분주기
-│   ├── digit_scanner.vhd           ← 자리 선택 카운터 (0→1→2→3 순환)
-│   ├── display_policy.vhd          ← FSM 상태별 표시 정책 결정 로직
-│   └── fnd_driver.vhd              ← TOP : 위 4개 모듈을 통합한 최상위 모듈
+├── src/                            ← 합성 대상 (Quartus에 추가할 파일)
+│   ├── vhdl/                       ← VHDL 5개
+│   │   ├── seg7_decoder.vhd
+│   │   ├── clk_divider.vhd
+│   │   ├── digit_scanner.vhd
+│   │   ├── display_policy.vhd
+│   │   └── fnd_driver.vhd          ← VHDL TOP
+│   └── verilog/                    ← Verilog 5개 (동일 동작)
+│       ├── seg7_decoder.v
+│       ├── clk_divider.v
+│       ├── digit_scanner.v
+│       ├── display_policy.v
+│       └── fnd_driver.v            ← Verilog TOP
 │
 ├── testbench/                      ← 시뮬레이션 전용 (합성 대상 아님)
-│   ├── tb_seg7_decoder.vhd
-│   ├── tb_clk_divider.vhd
-│   ├── tb_digit_scanner.vhd
-│   ├── tb_display_policy.vhd
-│   └── tb_fnd_driver.vhd           ← 통합 테스트벤치
+│   ├── vhdl/
+│   │   ├── tb_seg7_decoder.vhd
+│   │   ├── tb_clk_divider.vhd
+│   │   ├── tb_digit_scanner.vhd
+│   │   ├── tb_display_policy.vhd
+│   │   └── tb_fnd_driver.vhd       ← VHDL 통합 TB
+│   └── verilog/
+│       ├── tb_seg7_decoder.v
+│       ├── tb_clk_divider.v
+│       ├── tb_digit_scanner.v
+│       ├── tb_display_policy.v
+│       └── tb_fnd_driver.v         ← Verilog 통합 TB
 │
 ├── sim/                            ← ModelSim/Questa 시뮬레이션 스크립트
-│   ├── run_all.do                  ← 전체 모듈 한꺼번에 시뮬
+│   ├── run_all_vhdl.do             ← VHDL 전체 컴파일·실행
+│   ├── run_all_verilog.do          ← Verilog 전체 컴파일·실행
 │   └── README_시뮬레이션.md
 │
 └── quartus/                        ← Quartus 프로젝트 자료
-    ├── fnd_driver.qsf              ← 핀 배정 파일 (HBE-Combo II-SE 기준)
+    ├── fnd_driver_vhdl.qsf         ← VHDL 핀 배정 (HBE-Combo II-SE)
+    ├── fnd_driver_verilog.qsf      ← Verilog 핀 배정 (동일 핀)
     ├── 핀배치_가이드.md
     └── 컴파일_가이드.md
 ```
@@ -66,29 +85,45 @@
 
 ## 3. 빠른 시작 (Quick Start)
 
-### A. Quartus에서 단독 합성하기
+### A. Quartus에서 단독 합성하기 — 언어 택일
 
+#### VHDL 버전
 1. Quartus Prime 새 프로젝트 생성 (Top entity: `fnd_driver`)
-2. `src/` 폴더의 모든 `.vhd` 파일을 프로젝트에 추가
-3. `quartus/fnd_driver.qsf` 의 핀 할당을 본인 프로젝트의 `.qsf` 에 복사
+2. `src/vhdl/` 의 모든 `.vhd` 파일을 프로젝트에 추가
+3. `quartus/fnd_driver_vhdl.qsf` 의 핀 할당을 본인 프로젝트의 `.qsf` 에 복사
 4. Device 선택: **EP2C8Q208C8**
-5. Compile (Ctrl+L)
-6. USB Blaster 로 보드에 다운로드
+5. Compile (Ctrl+L) → USB Blaster 로 다운로드
+
+#### Verilog 버전
+1. Quartus Prime 새 프로젝트 생성 (Top entity: `fnd_driver`)
+2. `src/verilog/` 의 모든 `.v` 파일을 프로젝트에 추가
+3. `quartus/fnd_driver_verilog.qsf` 핀 할당 복사
+4. 이하 동일
+
+> ⚠️ 두 버전을 동시에 한 Quartus 프로젝트에 넣지 말 것 (top entity `fnd_driver` 이름 충돌).
 
 ### B. ModelSim 에서 시뮬레이션 하기
 
 ```tcl
 # ModelSim Transcript 창에서
 cd <이 폴더 경로>/sim
-do run_all.do
+
+do run_all_vhdl.do        # VHDL 버전
+# 또는
+do run_all_verilog.do     # Verilog 버전
 ```
 
-또는 개별 단위 검증:
+개별 단위 검증:
 ```tcl
+# VHDL
 vlib work
-vcom ../src/seg7_decoder.vhd ../testbench/tb_seg7_decoder.vhd
-vsim work.tb_seg7_decoder
-run -all
+vcom ../src/vhdl/seg7_decoder.vhd ../testbench/vhdl/tb_seg7_decoder.vhd
+vsim work.tb_seg7_decoder ; run -all
+
+# Verilog
+vlib work
+vlog ../src/verilog/seg7_decoder.v ../testbench/verilog/tb_seg7_decoder.v
+vsim work.tb_seg7_decoder ; run -all
 ```
 
 ---

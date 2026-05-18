@@ -1,16 +1,21 @@
 # 시뮬레이션 가이드
 
+> 본 프로젝트는 **VHDL 과 Verilog 두 버전** 을 함께 제공한다.
+> 동작·인터페이스·시뮬레이션 결과는 동일하며, 둘 중 편한 언어로 검증/합성 가능.
+
 ## 1. ModelSim / Questa (권장)
 
 ```tcl
 # ModelSim Transcript 창에서
 cd <이 sim 폴더의 경로>
-do run_all.do
+do run_all_vhdl.do        # VHDL 버전 실행
+# 또는
+do run_all_verilog.do     # Verilog 버전 실행
 ```
 
-`run_all.do` 가 자동으로 수행하는 일:
+각 스크립트가 자동으로 수행하는 일:
 1. `work` 라이브러리 생성
-2. `src/` 5개 + `testbench/` 5개 모두 컴파일
+2. `src/<언어>/` 5개 + `testbench/<언어>/` 5개 모두 컴파일
 3. 4개 단위 TB (seg7_decoder, clk_divider, digit_scanner, display_policy) 자동 실행
    → assertion 에러가 없으면 "PASS" 메시지가 transcript 에 표시됨
 4. 통합 TB (`tb_fnd_driver`) 를 GUI 모드로 띄우고 Wave 창에 주요 신호 추가
@@ -18,9 +23,18 @@ do run_all.do
 
 ## 2. 개별 단위 TB 만 돌리고 싶을 때
 
+### VHDL
 ```tcl
 vlib work
-vcom -2002 ../src/seg7_decoder.vhd ../testbench/tb_seg7_decoder.vhd
+vcom -2002 ../src/vhdl/seg7_decoder.vhd ../testbench/vhdl/tb_seg7_decoder.vhd
+vsim work.tb_seg7_decoder
+run -all
+```
+
+### Verilog
+```tcl
+vlib work
+vlog ../src/verilog/seg7_decoder.v ../testbench/verilog/tb_seg7_decoder.v
 vsim work.tb_seg7_decoder
 run -all
 ```
@@ -64,6 +78,7 @@ Quartus 22 이상에서는 Questa-Intel 이 동봉됩니다.
 | 에러 메시지 | 원인 | 해결 |
 |---|---|---|
 | `Error: vcom: Library 'work' not found` | vlib 생략 | `vlib work` 먼저 실행 |
-| `Cannot find ../src/seg7_decoder.vhd` | sim 폴더가 아닌 곳에서 do 실행 | `cd` 로 sim 폴더 이동 |
-| `Error: (vcom-1136) Unknown identifier "rising_edge"` | std_logic_1164 미사용 | 모든 파일이 `use ieee.std_logic_1164.all;` 포함 확인 |
-| `assert failure` | 디코더 LUT 와 진리표 불일치 | 진리표(docs/03) 또는 LUT 수정 |
+| `Cannot find ../src/vhdl/seg7_decoder.vhd` | sim 폴더가 아닌 곳에서 do 실행 | `cd` 로 sim 폴더 이동 |
+| `Error: (vcom-1136) Unknown identifier "rising_edge"` | std_logic_1164 미사용 | 모든 VHDL 파일이 `use ieee.std_logic_1164.all;` 포함 확인 |
+| `Error: (vlog-2110) Identifier ... must be declared` | Verilog 모듈명/파일 불일치 | 파일명 ↔ 모듈명 일치 확인 |
+| `assert failure` / FAIL 메시지 | 디코더 LUT 와 진리표 불일치 | 진리표(docs/03) 또는 LUT 수정 |

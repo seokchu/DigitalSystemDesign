@@ -16,18 +16,18 @@ if {[file exists work]} { vdel -all -lib work }
 vlib work
 
 # --- 1. 소스 컴파일 (순서 중요 : 하위 모듈 먼저)
-vcom -2002 ../src/seg7_decoder.vhd
-vcom -2002 ../src/clk_divider.vhd
-vcom -2002 ../src/digit_scanner.vhd
-vcom -2002 ../src/display_policy.vhd
-vcom -2002 ../src/fnd_driver.vhd
+vcom -2002 ../src/vhdl/seg7_decoder.vhd
+vcom -2002 ../src/vhdl/clk_divider.vhd
+vcom -2002 ../src/vhdl/digit_scanner.vhd
+vcom -2002 ../src/vhdl/display_policy.vhd
+vcom -2002 ../src/vhdl/fnd_driver.vhd
 
 # --- 2. 테스트벤치 컴파일
-vcom -2002 ../testbench/tb_seg7_decoder.vhd
-vcom -2002 ../testbench/tb_clk_divider.vhd
-vcom -2002 ../testbench/tb_digit_scanner.vhd
-vcom -2002 ../testbench/tb_display_policy.vhd
-vcom -2002 ../testbench/tb_fnd_driver.vhd
+vcom -2002 ../testbench/vhdl/tb_seg7_decoder.vhd
+vcom -2002 ../testbench/vhdl/tb_clk_divider.vhd
+vcom -2002 ../testbench/vhdl/tb_digit_scanner.vhd
+vcom -2002 ../testbench/vhdl/tb_display_policy.vhd
+vcom -2002 ../testbench/vhdl/tb_fnd_driver.vhd
 
 # --- 3. 단위 TB 들을 자동 실행 (assert 만 사용 → 짧음)
 vsim -c work.tb_seg7_decoder ; run -all ; quit -sim
