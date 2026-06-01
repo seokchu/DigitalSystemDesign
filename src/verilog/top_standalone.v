@@ -17,9 +17,11 @@
 //     - fnd_com[3:0] (4)
 //
 //   ※ 팀 통합 시(3주차) 에는 이 파일을 사용하지 않고, 이서영의 top 에서
-//      fnd_driver 만 인스턴스화하여 사용한다.
+//      fnd_driver (또는 fnd_team_adapter) 만 인스턴스화하여 사용한다.
 //
-// 시연 시나리오 (1MHz 기준 약 ~17초 한 사이클)
+//   ★ 팀 명세 §1 의 1kHz 단일 도메인에 맞춰 모든 카운터를 1kHz 기준으로 튜닝.
+//
+// 시연 시나리오 (1kHz 기준 약 ~17초 한 사이클)
 //   phase 0 : IDLE        (1초)  ----
 //   phase 1 : INPUT cnt=0 (0.5초) ____
 //   phase 2 : INPUT cnt=1 (0.5초) *___
@@ -40,21 +42,22 @@ module top_standalone (
 );
 
     //--------------------------------------------------------------
-    // 1Hz tick 생성 (1MHz / 500,000 = 2Hz → 토글하면 0.5s 단위 step)
+    // 0.5초 펄스 생성
+    //   1kHz 클럭에서 0.5s = 500 cycles → 카운터 0~499 → 비교값 499
     //--------------------------------------------------------------
-    reg [19:0] hz_cnt;
-    reg        half_sec_tick;     // 0.5초마다 1-cycle 펄스
+    reg [9:0] hz_cnt;
+    reg       half_sec_tick;     // 0.5초마다 1-cycle 펄스
 
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
-            hz_cnt        <= 20'd0;
+            hz_cnt        <= 10'd0;
             half_sec_tick <= 1'b0;
         end else begin
-            if (hz_cnt == 20'd499_999) begin
-                hz_cnt        <= 20'd0;
+            if (hz_cnt == 10'd499) begin
+                hz_cnt        <= 10'd0;
                 half_sec_tick <= 1'b1;
             end else begin
-                hz_cnt        <= hz_cnt + 20'd1;
+                hz_cnt        <= hz_cnt + 10'd1;
                 half_sec_tick <= 1'b0;
             end
         end
@@ -147,9 +150,14 @@ module top_standalone (
     end
 
     //--------------------------------------------------------------
-    // fnd_driver 인스턴스 (기본 generic)
+    // fnd_driver 인스턴스
+    //   1kHz 단일 도메인 default (SCAN_DIV=1, BLINK_DIV=100) 그대로 사용.
+    //   명시성을 위해 #() 로 한 번 더 표기.
     //--------------------------------------------------------------
-    fnd_driver U_FND (
+    fnd_driver #(
+        .SCAN_DIV  (1),
+        .BLINK_DIV (100)
+    ) U_FND (
         .clk         (clk),
         .reset_n     (reset_n),
         .fsm_state   (w_fsm_state),

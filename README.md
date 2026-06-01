@@ -26,7 +26,9 @@
 ## 2. 폴더 구조
 
 > **★ 본 프로젝트는 VHDL 과 Verilog 두 버전을 모두 제공한다.**
-> 동작·인터페이스·시뮬레이션 결과는 100% 동일하며, `src/<언어>/`, `testbench/<언어>/` 폴더로 분리되어 있다.
+> 팀 통합 언어는 **Verilog 로 확정**, 1kHz 단일 클럭 도메인 사용.
+> Verilog 버전에는 팀 명세 대조 피드백을 반영한 `fnd_team_adapter.v` 가 추가되어 있다 ([docs/08](docs/08_팀FSM_연동_피드백반영.md) 참조).
+> VHDL 버전은 학습/시뮬레이션 비교용으로 유지된다.
 
 ```
 장현석_FND_프로젝트/
@@ -39,7 +41,8 @@
 │   ├── 04_시분할_멀티플렉싱_이론.md
 │   ├── 05_마스킹과_FSM연동_이론.md
 │   ├── 06_VHDL_모듈_상세_설명.md   ← 코드 한줄한줄 해설 (VHDL 기준, Verilog 도 구조 동일)
-│   └── 07_통합과_인터페이스_명세.md
+│   ├── 07_통합과_인터페이스_명세.md
+│   └── 08_팀FSM_연동_피드백반영.md ← ★ 1kHz 변경 + 어댑터 (Verilog)
 │
 ├── src/                            ← 합성 대상 (Quartus에 추가할 파일)
 │   ├── vhdl/                       ← VHDL 5개
@@ -48,12 +51,14 @@
 │   │   ├── digit_scanner.vhd
 │   │   ├── display_policy.vhd
 │   │   └── fnd_driver.vhd          ← VHDL TOP
-│   └── verilog/                    ← Verilog 5개 (동일 동작)
+│   └── verilog/                    ← Verilog (팀 통합 언어, 1kHz 도메인 default)
 │       ├── seg7_decoder.v
 │       ├── clk_divider.v
 │       ├── digit_scanner.v
 │       ├── display_policy.v
-│       └── fnd_driver.v            ← Verilog TOP
+│       ├── fnd_driver.v            ← FND 코어 TOP
+│       ├── fnd_team_adapter.v     ← ★ 팀 FSM 인터페이스 어댑터
+│       └── top_standalone.v        ← 단독 보드 시연 래퍼 (자동 순환)
 │
 ├── testbench/                      ← 시뮬레이션 전용 (합성 대상 아님)
 │   ├── vhdl/

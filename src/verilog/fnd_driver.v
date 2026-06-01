@@ -16,18 +16,27 @@
 // VHDL 버전(../vhdl/fnd_driver.vhd) 과 100% 동일한 동작.
 //
 // Port (장현석_역할별내용.pptx 슬라이드 1 표 그대로)
-//   clk         in  1   : 1MHz 시스템 클럭
+//   clk         in  1   : 시스템 클럭 (팀 명세 §1 : 1kHz 단일 도메인)
 //   reset_n     in  1   : 비동기 active-low 리셋
+//                          (팀 FSM 의 rst 는 active-high 이므로 통합 시
+//                           reset_n = ~rst 로 연결할 것. fnd_team_adapter.v 참조)
 //   fsm_state   in  3   : 메인 FSM 상태 (이서영)
-//   mask_enable in  1   : 마스킹 ON/OFF (이서영)
-//   input_count in  3   : 입력된 자릿수 0~4 (손동한)
-//   digit_data  in  16  : 4자리 BCD (정용성)
+//   mask_enable in  1   : 마스킹 ON/OFF (팀 FSM 미제공 → 통합 시 1'b1 상수)
+//   input_count in  3   : 입력된 자릿수 0~4 (팀 FSM 은 thermometer 4-bit 출력
+//                          이므로 popcount 어댑터 필요. fnd_team_adapter.v 참조)
+//   digit_data  in  16  : 4자리 BCD (팀 FSM 미노출 → 통합 시 16'h0000 상수)
 //   fnd_seg     out 8   : a~g + dp
 //   fnd_com     out 4   : COM1~4 active-low
+//
+// Parameter (★ 팀 피드백 반영 ★)
+//   SCAN_DIV  : 1 = 1kHz 클럭에서 자리당 1ms (250Hz refresh, 깜빡임 없음)
+//   BLINK_DIV : 100 = 1kHz 클럭에서 100ms 토글 → 5Hz blink
+//   ※ 1MHz 클럭으로 운용하려면 instantiation 시
+//     #(.SCAN_DIV(1000), .BLINK_DIV(100000)) 으로 override.
 //------------------------------------------------------------------------------
 module fnd_driver #(
-    parameter integer SCAN_DIV  = 1000,
-    parameter integer BLINK_DIV = 100000
+    parameter integer SCAN_DIV  = 1,     // 1kHz 클럭 기준 (구 default 1000 = 1MHz)
+    parameter integer BLINK_DIV = 100    // 1kHz 클럭 기준 (구 default 100000 = 1MHz)
 ) (
     // 시스템
     input  wire        clk,
