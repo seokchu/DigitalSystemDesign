@@ -101,7 +101,7 @@ end process;
 
 ### 6.2.3 핵심 process : blink_tick 생성
 - `blink_lvl` 을 BLINK_DIV 마다 토글 → 결과적으로 `blink_tick` 은 50% duty 의 5Hz 레벨 신호.
-- 펄스가 아닌 **레벨** 이어야 하는 이유 : display_policy 에서 `if blink_tick='1' then **** else blank` 분기하므로, 충분히 오래 유지되어야 사람이 깜빡임을 인지.
+- 펄스가 아닌 **레벨** 이어야 하는 이유 : display_policy 에서 `if blink_tick='1' then ---- else blank` 분기하므로, 충분히 오래 유지되어야 사람이 깜빡임을 인지.
 
 ### 6.2.4 단위 검증
 [testbench/tb_clk_divider.vhd](../testbench/tb_clk_divider.vhd) 에서 generic 을 10/20 으로 줄여, scan_tick 이 10 cycle 주기, blink_tick 이 20 cycle 토글되는지 Wave 로 확인.
@@ -184,10 +184,11 @@ function mask_pattern(cnt : integer) return std_logic_vector is
     variable v : std_logic_vector(15 downto 0);
 begin
     v := C_BLANK & C_BLANK & C_BLANK & C_BLANK;
-    if cnt >= 1 then v(15 downto 12) := C_STAR; end if;
-    if cnt >= 2 then v(11 downto  8) := C_STAR; end if;
-    if cnt >= 3 then v( 7 downto  4) := C_STAR; end if;
-    if cnt >= 4 then v( 3 downto  0) := C_STAR; end if;
+    -- ★ 변경 : C_STAR → C_DASH (8과 시각 충돌 회피)
+    if cnt >= 1 then v(15 downto 12) := C_DASH; end if;
+    if cnt >= 2 then v(11 downto  8) := C_DASH; end if;
+    if cnt >= 3 then v( 7 downto  4) := C_DASH; end if;
+    if cnt >= 4 then v( 3 downto  0) := C_DASH; end if;
     return v;
 end function;
 ```
@@ -205,11 +206,11 @@ begin
     d1 <= C_BLANK; d2 <= C_BLANK; d3 <= C_BLANK; d4 <= C_BLANK; -- default
 
     case fsm_state is
-        when ST_IDLE   => -- ----
+        when ST_IDLE   => -- blank (★ 변경 : 종전 ----)
         when ST_INPUT | ST_CHANGE =>
             if mask_enable = '1' then ... masked ...
             else ... digit_data ...
-        when ST_CHECK  => -- blink **** / blank
+        when ST_CHECK  => -- blink ---- / blank (★ 변경 : 종전 ****)
         when ST_UNLOCK => -- blank
         when ST_ALARM  => -- FAIL
         when others    => -- blank

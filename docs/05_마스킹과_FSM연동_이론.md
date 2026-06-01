@@ -2,87 +2,85 @@
 
 ## 5.1 비밀번호 마스킹이란
 
-ATM, 도어락, 로그인 화면 등에서 사용자가 비밀번호를 입력할 때 실제 숫자 대신 `*` 같은 기호로 보여주는 보안 기법.
+ATM, 도어락, 로그인 화면 등에서 사용자가 비밀번호를 입력할 때 실제 숫자 대신 기호로 보여주는 보안 기법.
 
-본 프로젝트의 마스킹 정책 (`디시설_오후_프로젝트.pptx` 19번 슬라이드):
-- **Masking Logic:** 비밀번호 노출 방지를 위해 숫자 대신 `****` (별표 형태) 표시
-- **Hex to 7-Seg:** 마스킹 비트 설정 시 모든 세그먼트(a~g) 점등 로직 적용
-- **자릿수 표시:** 입력된 자리만 `*`, 나머지는 빈칸 (`*___`, `**__`, `***_`, `****`)
+원안(PPT) 의 정책 vs 최종 채택 정책:
+- **원안** (`디시설_오후_프로젝트.pptx` 19번 슬라이드): "숫자 대신 `****` (별표 형태) 표시. 마스킹 비트 설정 시 모든 세그먼트(a~g) 점등".
+- **최종 채택** : `-` (대시, g 세그먼트 1개) 로 마스킹.
+  > **이유** : `*` 를 a~g 전체 점등으로 그리면 숫자 `8` 과 7세그먼트 패턴이 100% 동일하다. mask_enable=0 디버그 모드나 ALARM 의 시도 횟수 표시에서 `8` 이 등장할 때 마스킹과 시각 충돌. dp 만 켜진 `-` 는 어떤 숫자와도 헷갈리지 않으면서 입력 진행 상황을 명확히 전달한다.
 
 ---
 
 ## 5.2 동적 마스킹 — `input_count` 와의 동기
 
 `input_count`(3-bit, 0~4) 는 손동한(C) 의 입력 처리 모듈이 「지금까지 몇 자리 입력되었는가」를 알려주는 신호.
+(팀 명세 §6-2 의 thermometer 인코딩 `input_count_led[3:0]` → popcount 변환은 [`fnd_team_adapter.v`](../src/verilog/fnd_team_adapter.v) 가 담당. 본 모듈은 정수 0~4 만 받음.)
 
 본 모듈에서의 표시 매핑:
 
-| input_count | 자리4 | 자리3 | 자리2 | 자리1 | 의미 |
+| input_count | 자리1 | 자리2 | 자리3 | 자리4 | 시각 효과 |
 |---|---|---|---|---|---|
-| 0 | ` ` | ` ` | ` ` | ` ` | 아직 입력 없음 |
-| 1 | ` ` | ` ` | ` ` | `*` | 1자리 입력됨 |
-| 2 | ` ` | ` ` | `*` | `*` | 2자리 입력됨 |
-| 3 | ` ` | `*` | `*` | `*` | 3자리 입력됨 |
-| 4 | `*` | `*` | `*` | `*` | 4자리 모두 입력 완료 |
+| 0 | ` ` | ` ` | ` ` | ` ` | 아직 입력 없음 (전체 빈칸) |
+| 1 | `-` | ` ` | ` ` | ` ` | 1자리 입력됨 |
+| 2 | `-` | `-` | ` ` | ` ` | 2자리 입력됨 |
+| 3 | `-` | `-` | `-` | ` ` | 3자리 입력됨 |
+| 4 | `-` | `-` | `-` | `-` | 4자리 모두 입력 완료 |
 
 > 자리 번호 약속: **자리1 = 가장 왼쪽 (최상위 자리)** → 입력은 왼쪽부터 채워지는 UX 를 따릅니다. 만약 보드 결선이 오른쪽부터라면 본 모듈의 `d0,d1,d2,d3` 매핑을 뒤집어 주면 됩니다.
 
-### VHDL 의사 코드
-```vhdl
--- masked_data : 마스킹 적용 후 16-bit 출력
--- 자리 인덱스 i (1=가장왼쪽 ... 4=가장오른쪽) 라고 가정 시
--- input_count >= i 이면 그 자리에 '*' (코드 0xA), 아니면 빈칸 (0xC)
-for i in 1 to 4 loop
-    if to_integer(unsigned(input_count)) >= i then
-        masked_digit(i) := "1010";  -- '*'
-    else
-        masked_digit(i) := "1100";  -- ' '
-    end if;
-end loop;
+### Verilog 의사 코드
+```verilog
+// masked : 마스킹 적용 후 16-bit 출력
+// 자리 인덱스 i (1=가장왼쪽 ... 4=가장오른쪽) 라고 할 때
+// input_count >= i 이면 그 자리에 '-' (코드 0xB), 아니면 빈칸 (0xC)
+masked = {C_BLANK, C_BLANK, C_BLANK, C_BLANK};
+if (input_count >= 3'd1) masked[15:12] = C_DASH;   // Digit1
+if (input_count >= 3'd2) masked[11: 8] = C_DASH;   // Digit2
+if (input_count >= 3'd3) masked[ 7: 4] = C_DASH;   // Digit3
+if (input_count >= 3'd4) masked[ 3: 0] = C_DASH;   // Digit4
 ```
 
 ---
 
-## 5.3 FSM 상태별 표시 정책
-
-`장현석_역할별내용.pptx` 2번 슬라이드 표를 그대로 구현:
+## 5.3 FSM 상태별 표시 정책 (최종)
 
 | FSM 상태 (3-bit) | FND 표시 | 의도 | 비고 |
 |---|---|---|---|
-| `000` IDLE   | `----` (대시 4개) | 대기 상태 표현 | 전원 ON 직후, 자동 잠금 후 복귀 시 |
-| `001` INPUT  | `****` 마스킹 (input_count 동기) | 비밀번호 노출 방지 | 입력된 자리만 `*` |
-| `010` CHECK  | 짧은 깜빡임 (BLINK) | 검증 중 시각 피드백 | 100~200ms 의도적 지연 |
-| `011` UNLOCK | 빈 화면 (` `) | LCD 메시지에 양보 | LCD가 'UNLOCKED' 담당 |
-| `100` ALARM  | `FAIL` 또는 시도 횟수 | 경보 상태 명확화 | F/A/I/L 글자 사용 |
-| `101` CHANGE | 마스킹 표시 | 새 비번 입력도 동일 보안 | INPUT과 같은 정책 |
+| `000` IDLE   | 빈 화면 | LCD 의 "ENTER PW" 안내가 담당 | 전원 ON 직후, 자동 잠금 후 복귀 |
+| `001` INPUT  | `-` 마스킹 (input_count 동기) | 비밀번호 노출 방지 | 입력된 자리만 `-` |
+| `010` CHECK  | `----` ↔ blank 깜빡임 | 검증 중 시각 피드백 | 5Hz 블링크 |
+| `011` UNLOCK | 빈 화면 | LCD 가 'UNLOCKED' 담당 | — |
+| `100` ALARM  | `FAIL` 정적 표시 | 경보 상태 명확화 | F/A/1/L 글자 사용 |
+| `101` CHANGE | INPUT 과 동일 | 새 비번 입력도 동일 보안 | dash 마스킹 |
 
 ### 인코딩 약속
 > `fsm_state` 는 3-bit이므로 `110`, `111` 의 두 잔여 코드는 `when others => 빈화면` 으로 처리해 안전 동작 보장.
 
-### VHDL 의사 코드 (display_policy)
-```vhdl
-process(fsm_state, digit_data, input_count, blink_tick)
-begin
-    case fsm_state is
-        when "000" =>  -- IDLE
-            disp_digits <= ("1011","1011","1011","1011");  -- ----
-        when "001" | "101" =>  -- INPUT, CHANGE
-            disp_digits <= masked_digits(input_count);
-        when "010" =>  -- CHECK
-            if blink_tick = '1' then
-                disp_digits <= ("1100","1100","1100","1100");  -- blank
-            else
-                disp_digits <= ("1010","1010","1010","1010");  -- ****
-            end if;
-        when "011" =>  -- UNLOCK
-            disp_digits <= ("1100","1100","1100","1100");
-        when "100" =>  -- ALARM
-            disp_digits <= ("1101","1110","0001","1111");  -- F A 1 L  (시도 횟수 1로 가정)
-            -- 시도 횟수를 자리3에 동적으로 표시하려면 digit_data 입력 사용
-        when others =>
-            disp_digits <= ("1100","1100","1100","1100");
-    end case;
-end process;
+### Verilog 의사 코드 (display_policy)
+```verilog
+case (fsm_state)
+    ST_IDLE: begin
+        disp_digits = {C_BLANK, C_BLANK, C_BLANK, C_BLANK};   // 빈 화면
+    end
+    ST_INPUT, ST_CHANGE: begin
+        if (mask_enable)
+            disp_digits = masked;          // 대시 마스킹
+        else
+            disp_digits = digit_data;      // 디버그 raw 표시
+    end
+    ST_CHECK: begin
+        if (blink_tick)
+            disp_digits = {C_DASH, C_DASH, C_DASH, C_DASH};   // ----
+        else
+            disp_digits = {C_BLANK, C_BLANK, C_BLANK, C_BLANK};
+    end
+    ST_UNLOCK:
+        disp_digits = {C_BLANK, C_BLANK, C_BLANK, C_BLANK};
+    ST_ALARM:
+        disp_digits = {C_F, C_A, 4'b0001, C_L};   // F A 1 L
+    default:
+        disp_digits = {C_BLANK, C_BLANK, C_BLANK, C_BLANK};
+endcase
 ```
 
 `disp_digits` 는 4자리 × 4-bit 의 collection 으로, 이후 MUX 와 디코더로 흘러갑니다.

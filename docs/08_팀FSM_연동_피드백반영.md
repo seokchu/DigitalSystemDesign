@@ -161,7 +161,28 @@ fnd_driver U_FND (
 
 ---
 
-## 8.5 검증 권장 순서
+## 8.5 추가 디자인 결정 — 마스킹 기호 변경 (`*` → `-`)
+
+본 피드백 반영 직후 자체 점검에서 발견된 시각 충돌 이슈와 그 해결.
+
+**문제** : PPT 원안의 마스킹은 a~g 전체 점등(`****`) 인데, 7세그먼트에서 이 패턴은 숫자 `8` 과 완전히 동일하다. 향후 `mask_enable=0` 디버그 모드나 ALARM 시도횟수 표시에서 `8` 이 등장할 때 사용자가 마스킹과 숫자를 구분할 수 없음.
+
+**해결** :
+- 마스킹 기호를 `-` (g 세그먼트만 점등) 로 변경
+- IDLE 화면을 `----` 에서 빈 화면으로 변경 (LCD "ENTER PW" 안내에 양보)
+- CHECK blink 도 `*` 대신 `-` 사용
+
+**영향 파일** :
+- `src/verilog/display_policy.v` — masking 패턴 C_STAR → C_DASH, IDLE C_DASH → C_BLANK, CHECK C_STAR → C_DASH
+- `src/vhdl/display_policy.vhd` — 동일
+- `testbench/{verilog,vhdl}/tb_display_policy.{v,vhd}` — 기대값 갱신
+- `docs/02`, `docs/05`, `docs/06`, `README` — 표/예제 갱신
+
+`seg7_decoder` 의 `*` 인코딩(0xA)은 그대로 두어 향후 의도적으로 별표를 쓰고 싶을 때 사용 가능.
+
+---
+
+## 8.6 검증 권장 순서
 
 1. **단독 검증** : `top_standalone.v` 를 보드에 다운로드 (1kHz 클럭으로 자동 순환 시연)
 2. **어댑터 검증** : `fnd_team_adapter.v` 만 단독으로 합성·다운로드.

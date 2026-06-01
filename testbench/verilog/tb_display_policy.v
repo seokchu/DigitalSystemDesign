@@ -43,10 +43,10 @@ module tb_display_policy;
     );
 
     initial begin
-        // (1) IDLE → ----
+        // (1) IDLE → blank (★ 변경)
         fsm_state = 3'b000;
         #100;
-        check({C_DASH, C_DASH, C_DASH, C_DASH}, "IDLE");
+        check({C_BLANK, C_BLANK, C_BLANK, C_BLANK}, "IDLE blank");
 
         // (2) INPUT → 마스킹 점진 0~4
         fsm_state = 3'b001;
@@ -56,12 +56,12 @@ module tb_display_policy;
             $display("INPUT cnt=%0d disp=%b", n, disp_digits);
         end
 
-        // (3) CHECK
+        // (3) CHECK (★ 변경 : **** → ----)
         fsm_state  = 3'b010;
         blink_tick = 1'b0; #100;
         check({C_BLANK, C_BLANK, C_BLANK, C_BLANK}, "CHECK low");
         blink_tick = 1'b1; #100;
-        check({C_STAR, C_STAR, C_STAR, C_STAR}, "CHECK high");
+        check({C_DASH, C_DASH, C_DASH, C_DASH}, "CHECK high (----)");
 
         // (4) UNLOCK → blank
         fsm_state = 3'b011; #100;
@@ -71,11 +71,11 @@ module tb_display_policy;
         fsm_state = 3'b100; #100;
         check({4'b1101, 4'b1110, 4'b0001, 4'b1111}, "ALARM");
 
-        // (6) CHANGE → INPUT 동일
+        // (6) CHANGE → INPUT 동일 (★ 마스킹은 대시)
         fsm_state   = 3'b101;
         input_count = 3'b011;
         #100;
-        check({C_STAR, C_STAR, C_STAR, C_BLANK}, "CHANGE cnt=3");
+        check({C_DASH, C_DASH, C_DASH, C_BLANK}, "CHANGE cnt=3 (---_)");
 
         // (7) mask_enable=0 → raw digit_data
         fsm_state   = 3'b001;

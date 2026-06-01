@@ -43,11 +43,11 @@ begin
     p_stim : process
     begin
         ------------------------------------------------------------
-        -- (1) IDLE → ----
+        -- (1) IDLE → blank (★ 변경)
         fsm_state <= "000";
         wait for 100 ns;
-        assert disp_digits = (C_DASH & C_DASH & C_DASH & C_DASH)
-            report "IDLE FAIL : expected ----" severity error;
+        assert disp_digits = (C_BLANK & C_BLANK & C_BLANK & C_BLANK)
+            report "IDLE FAIL : expected blank" severity error;
 
         ------------------------------------------------------------
         -- (2) INPUT → 마스킹 0~4 단계 점진 표시
@@ -61,7 +61,7 @@ begin
         end loop;
 
         ------------------------------------------------------------
-        -- (3) CHECK → blink_tick 에 따라 **** ↔ blank
+        -- (3) CHECK → blink_tick 에 따라 ---- ↔ blank (★ 변경)
         fsm_state <= "010";
         blink_tick <= '0';
         wait for 100 ns;
@@ -69,8 +69,8 @@ begin
             report "CHECK(low) FAIL : expected blank" severity error;
         blink_tick <= '1';
         wait for 100 ns;
-        assert disp_digits = (C_STAR & C_STAR & C_STAR & C_STAR)
-            report "CHECK(high) FAIL : expected ****" severity error;
+        assert disp_digits = (C_DASH & C_DASH & C_DASH & C_DASH)
+            report "CHECK(high) FAIL : expected ----" severity error;
 
         ------------------------------------------------------------
         -- (4) UNLOCK → blank
@@ -90,12 +90,12 @@ begin
             report "ALARM FAIL : expected FAIL pattern" severity error;
 
         ------------------------------------------------------------
-        -- (6) CHANGE → INPUT 과 동일 (마스킹)
+        -- (6) CHANGE → INPUT 과 동일 (★ 마스킹은 대시)
         fsm_state   <= "101";
         input_count <= "011";
         wait for 100 ns;
-        assert disp_digits = (C_STAR & C_STAR & C_STAR & C_BLANK)
-            report "CHANGE FAIL : expected ***_" severity error;
+        assert disp_digits = (C_DASH & C_DASH & C_DASH & C_BLANK)
+            report "CHANGE FAIL : expected ---_" severity error;
 
         ------------------------------------------------------------
         -- (7) 마스킹 비활성 모드 : 실제 숫자 그대로 표시

@@ -87,10 +87,11 @@ architecture rtl of display_policy is
     begin
         -- 기본 : 전부 빈칸
         v := C_BLANK & C_BLANK & C_BLANK & C_BLANK;
-        if cnt >= 1 then v(15 downto 12) := C_STAR; end if;  -- Digit1
-        if cnt >= 2 then v(11 downto  8) := C_STAR; end if;  -- Digit2
-        if cnt >= 3 then v( 7 downto  4) := C_STAR; end if;  -- Digit3
-        if cnt >= 4 then v( 3 downto  0) := C_STAR; end if;  -- Digit4
+        -- ★ 변경 : C_STAR(별표, 8과 동일 패턴) → C_DASH(대시) 로 변경
+        if cnt >= 1 then v(15 downto 12) := C_DASH; end if;  -- Digit1
+        if cnt >= 2 then v(11 downto  8) := C_DASH; end if;  -- Digit2
+        if cnt >= 3 then v( 7 downto  4) := C_DASH; end if;  -- Digit3
+        if cnt >= 4 then v( 3 downto  0) := C_DASH; end if;  -- Digit4
         return v;
     end function;
 
@@ -116,11 +117,11 @@ begin
 
             --------------------------------------------------------
             when ST_IDLE =>
-                -- ---- 대기 화면 (전원 ON 직후, 자동 잠금 복귀 등)
-                d1 <= C_DASH;
-                d2 <= C_DASH;
-                d3 <= C_DASH;
-                d4 <= C_DASH;
+                -- ★ 변경 : 종전 '----' → blank. LCD 의 "ENTER PW" 안내가 담당.
+                d1 <= C_BLANK;
+                d2 <= C_BLANK;
+                d3 <= C_BLANK;
+                d4 <= C_BLANK;
 
             --------------------------------------------------------
             when ST_INPUT | ST_CHANGE =>
@@ -140,12 +141,12 @@ begin
 
             --------------------------------------------------------
             when ST_CHECK =>
-                -- 검증 중 시각 피드백 : 5Hz 로 **** ↔ blank
+                -- ★ 변경 : 종전 **** ↔ blank → ---- ↔ blank (마스킹과 동일 기호)
                 if blink_tick = '1' then
-                    d1 <= C_STAR;
-                    d2 <= C_STAR;
-                    d3 <= C_STAR;
-                    d4 <= C_STAR;
+                    d1 <= C_DASH;
+                    d2 <= C_DASH;
+                    d3 <= C_DASH;
+                    d4 <= C_DASH;
                 else
                     d1 <= C_BLANK;
                     d2 <= C_BLANK;
