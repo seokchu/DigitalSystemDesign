@@ -74,7 +74,7 @@ module tb_fnd_driver;
         #50000;
 
         if (fail_cnt == 0)
-            $display("==== tb_fnd_driver PASS : 5-sec lock display ok ====");
+            $display("==== tb_fnd_driver PASS : lock display ok ====");
         else
             $display("==== tb_fnd_driver FAIL : %0d mismatches ====", fail_cnt);
 

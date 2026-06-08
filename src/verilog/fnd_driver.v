@@ -1,7 +1,7 @@
 module fnd_driver #(
     parameter integer SCAN_DIV    = 1,
     parameter integer BLINK_DIV   = 100,
-    parameter integer LOCK_CYCLES = 5000
+    parameter integer LOCK_CYCLES = 10000
 ) (
     input  wire        clk,
     input  wire        reset_n,

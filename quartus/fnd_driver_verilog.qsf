@@ -6,9 +6,9 @@
 #   Verify every PIN number against the board manual before compiling.
 #   For standalone board demo, set TOP_LEVEL_ENTITY to top_standalone
 #   (it only needs clk, reset_n, fnd_seg, fnd_com, fnd1_seg).
-#   The 5-second lock DISPLAY is self-contained inside fnd_driver
+#   The 10-second lock DISPLAY is self-contained inside fnd_driver
 #   (internal timer): when the lock input rises (= FSM alarm_on, 3 wrong)
-#   the 4-digit array shows "----" and the 1-digit FND shows "-" for 5s.
+#   the 4-digit array shows "----" and the 1-digit FND shows "-" for 10s.
 #   lock is the only integration input: drive it from the FSM alarm_on
 #   (the same signal that already locks input and drives the buzzer).
 # =============================================================================

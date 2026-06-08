@@ -30,7 +30,7 @@ module top_standalone (
         if (!reset_n)
             phase <= 6'd0;
         else if (half_sec_tick) begin
-            if (phase == 6'd17)
+            if (phase == 6'd27)
                 phase <= 6'd0;
             else
                 phase <= phase + 6'd1;
@@ -70,9 +70,19 @@ module top_standalone (
             6'd13: begin w_fsm_state=3'b100; end
             6'd14: begin w_fsm_state=3'b100; end
             6'd15: begin w_fsm_state=3'b100; end
+            6'd16: begin w_fsm_state=3'b100; end
+            6'd17: begin w_fsm_state=3'b100; end
+            6'd18: begin w_fsm_state=3'b100; end
+            6'd19: begin w_fsm_state=3'b100; end
+            6'd20: begin w_fsm_state=3'b100; end
+            6'd21: begin w_fsm_state=3'b100; end
+            6'd22: begin w_fsm_state=3'b100; end
+            6'd23: begin w_fsm_state=3'b100; end
+            6'd24: begin w_fsm_state=3'b100; end
+            6'd25: begin w_fsm_state=3'b100; end
 
-            6'd16: begin w_fsm_state=3'b011; end
-            6'd17: begin w_fsm_state=3'b000; end
+            6'd26: begin w_fsm_state=3'b011; end
+            6'd27: begin w_fsm_state=3'b000; end
 
             default: begin w_fsm_state=3'b000; end
         endcase
@@ -81,7 +91,7 @@ module top_standalone (
     fnd_driver #(
         .SCAN_DIV    (1),
         .BLINK_DIV   (100),
-        .LOCK_CYCLES (5000)
+        .LOCK_CYCLES (10000)
     ) U_FND (
         .clk         (clk),
         .reset_n     (reset_n),

@@ -20,7 +20,7 @@ module fnd_team_adapter (
     fnd_driver #(
         .SCAN_DIV    (1),
         .BLINK_DIV   (100),
-        .LOCK_CYCLES (5000)
+        .LOCK_CYCLES (10000)
     ) U_FND (
         .clk         (clk),
         .reset_n     (reset_n_int),
