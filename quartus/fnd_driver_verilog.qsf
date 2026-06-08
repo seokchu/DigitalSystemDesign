@@ -1,58 +1,47 @@
 # =============================================================================
-# Quartus 핀 배정 파일 (Verilog 버전)
-# 보드 : HBE-Combo II-SE  (Altera Cyclone II EP2C8Q208C8)
+# Quartus pin assignment (Verilog)
+# Board : HBE-Combo II-SE  (Altera Cyclone II EP2C8Q208C8)
 #
-# ★ 중요 안내 ★
-#   본 파일은 VHDL 버전(fnd_driver_vhdl.qsf) 의 Verilog 짝꿍.
-#   소스 경로만 다르고, 핀 할당 / IO_STANDARD / Device 설정은 동일.
-#   둘 중 하나만 Quartus 프로젝트에 사용해야 한다 (top entity 이름 충돌).
-#
-#   ※ 핀 번호는 보드 매뉴얼로 확인 후 반드시 수정.
+# NOTE
+#   Verify every PIN number against the board manual before compiling.
+#   For standalone board demo, set TOP_LEVEL_ENTITY to top_standalone
+#   (it only needs clk, reset_n, fnd_seg, fnd_com, fnd1_seg).
+#   fail_count / lockout are internal signals driven by other team
+#   modules at integration time, so they need no pins there.
 # =============================================================================
 
-# --- Device --------------------------------------------------------------
+# --- Device ------------------------------------------------------------------
 set_global_assignment -name FAMILY "Cyclone II"
 set_global_assignment -name DEVICE EP2C8Q208C8
 set_global_assignment -name TOP_LEVEL_ENTITY fnd_driver
 
-# --- 컴파일 옵션 ---------------------------------------------------------
+# --- Compile -----------------------------------------------------------------
 set_global_assignment -name VERILOG_INPUT_VERSION VERILOG_2001
 
-# --- 소스 파일 추가 (Verilog 버전) ---------------------------------------
+# --- Source files ------------------------------------------------------------
 set_global_assignment -name VERILOG_FILE ../src/verilog/seg7_decoder.v
 set_global_assignment -name VERILOG_FILE ../src/verilog/clk_divider.v
 set_global_assignment -name VERILOG_FILE ../src/verilog/digit_scanner.v
 set_global_assignment -name VERILOG_FILE ../src/verilog/display_policy.v
 set_global_assignment -name VERILOG_FILE ../src/verilog/fnd_driver.v
+# Enable the next two only when synthesizing the standalone demo top:
+# set_global_assignment -name VERILOG_FILE ../src/verilog/top_standalone.v
+# set_global_assignment -name VERILOG_FILE ../src/verilog/fnd_team_adapter.v
 
 # =============================================================================
-# 핀 배정 (※ 실제 보드 매뉴얼로 검증 후 수정 필수)
+# Pin assignment (verify with board manual)
 # =============================================================================
 
-# --- 시스템 클럭 (1MHz) ---------------------------------------------------
+# --- System clock (1MHz) -----------------------------------------------------
 set_location_assignment PIN_23  -to clk
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk
 
-# --- Reset (push button, active-low) -------------------------------------
+# --- Reset (push button, active-low) -----------------------------------------
 set_location_assignment PIN_24  -to reset_n
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to reset_n
 
-# --- 외부에서 들어오는 신호 (이서영/손동한/정용성) -------------------------
-# 통합 시에는 이 신호들이 다른 모듈의 출력에 연결되므로 핀 할당 불필요.
-# 단독 다운로드(2주차 검증) 시 DIP 스위치/푸시버튼으로 강제 인가하려면
-# 아래 핀에 임시로 연결 가능. 핀번호는 보드 매뉴얼 확인 후 채우기.
-# set_location_assignment PIN_xx -to fsm_state[2]
-# set_location_assignment PIN_xx -to fsm_state[1]
-# set_location_assignment PIN_xx -to fsm_state[0]
-# set_location_assignment PIN_xx -to mask_enable
-# set_location_assignment PIN_xx -to input_count[2]
-# set_location_assignment PIN_xx -to input_count[1]
-# set_location_assignment PIN_xx -to input_count[0]
-# set_location_assignment PIN_xx -to digit_data[15] ... [0]
-
-# --- 4-Digit FND : Segment ------------------------------------------------
-# 본 모듈 약속 :  fnd_seg[7]=a , [6]=b , [5]=c , [4]=d ,
-#                 fnd_seg[3]=e , [2]=f , [1]=g , [0]=dp
+# --- 4-Digit FND : Segment ---------------------------------------------------
+# bit order : fnd_seg[7]=a [6]=b [5]=c [4]=d [3]=e [2]=f [1]=g [0]=dp
 set_location_assignment PIN_50  -to fnd_seg[7]  ;# a
 set_location_assignment PIN_51  -to fnd_seg[6]  ;# b
 set_location_assignment PIN_52  -to fnd_seg[5]  ;# c
@@ -61,14 +50,30 @@ set_location_assignment PIN_54  -to fnd_seg[3]  ;# e
 set_location_assignment PIN_55  -to fnd_seg[2]  ;# f
 set_location_assignment PIN_56  -to fnd_seg[1]  ;# g
 set_location_assignment PIN_57  -to fnd_seg[0]  ;# dp
-
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fnd_seg[*]
 
-# --- 4-Digit FND : COM (active-low, one-hot) -----------------------------
-# 본 모듈 약속 :  fnd_com[0]=COM1 ... fnd_com[3]=COM4
+# --- 4-Digit FND : COM (active-low, one-hot) ---------------------------------
+# fnd_com[0]=COM1 (Digit1, leftmost) ... fnd_com[3]=COM4 (Digit4, rightmost)
 set_location_assignment PIN_60  -to fnd_com[0]  ;# COM1 (Digit1)
 set_location_assignment PIN_61  -to fnd_com[1]  ;# COM2 (Digit2)
 set_location_assignment PIN_62  -to fnd_com[2]  ;# COM3 (Digit3)
 set_location_assignment PIN_63  -to fnd_com[3]  ;# COM4 (Digit4)
-
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fnd_com[*]
+
+# --- 1-Digit FND : fail attempt counter --------------------------------------
+# bit order : fnd1_seg[7]=a [6]=b [5]=c [4]=d [3]=e [2]=f [1]=g [0]=dp
+# 0 fails -> dash '-', 1/2/3 -> digit.
+set_location_assignment PIN_64  -to fnd1_seg[7]  ;# a
+set_location_assignment PIN_65  -to fnd1_seg[6]  ;# b
+set_location_assignment PIN_66  -to fnd1_seg[5]  ;# c
+set_location_assignment PIN_67  -to fnd1_seg[4]  ;# d
+set_location_assignment PIN_68  -to fnd1_seg[3]  ;# e
+set_location_assignment PIN_69  -to fnd1_seg[2]  ;# f
+set_location_assignment PIN_70  -to fnd1_seg[1]  ;# g
+set_location_assignment PIN_71  -to fnd1_seg[0]  ;# dp
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fnd1_seg[*]
+
+# --- Integration-only inputs (no board pins) ---------------------------------
+# fail_count[3:0] : from password compare module (jeong yong-seong)
+# lockout         : from 5-sec lockout timer (see local handoff folder)
+# These are wired module-to-module inside the team top, not to FPGA pins.

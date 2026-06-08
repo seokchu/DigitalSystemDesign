@@ -1,9 +1,3 @@
-//------------------------------------------------------------------------------
-// 파일명 : tb_seg7_decoder.v
-// 대상   : seg7_decoder
-//
-// 16개 코드(0x0~0xF) 각각에 대해 기대 패턴 일치 여부 자동 확인.
-//------------------------------------------------------------------------------
 `timescale 1ns/1ns
 
 module tb_seg7_decoder;
@@ -14,7 +8,6 @@ module tb_seg7_decoder;
     integer i;
     integer fail_cnt = 0;
 
-    // 기대 패턴 LUT (../vhdl/tb_seg7_decoder.vhd 와 동일)
     reg [7:0] expected [0:15];
     initial begin
         expected[0]  = 8'b11111100;

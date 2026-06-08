@@ -1,9 +1,3 @@
-//------------------------------------------------------------------------------
-// 파일명 : tb_digit_scanner.v
-// 대상   : digit_scanner
-//
-// scan_tick 8회 인가 → digit_sel 두 바퀴 순환, fnd_com one-hot 확인.
-//------------------------------------------------------------------------------
 `timescale 1ns/1ns
 
 module tb_digit_scanner;
@@ -53,7 +47,7 @@ module tb_digit_scanner;
         end
 
         if (fail_cnt == 0)
-            $display("==== digit_scanner PASS : 두 바퀴 순환 확인 ====");
+            $display("==== digit_scanner PASS : two full cycles verified ====");
         else
             $display("==== digit_scanner FAIL : %0d mismatches ====", fail_cnt);
 

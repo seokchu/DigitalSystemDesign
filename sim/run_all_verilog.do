@@ -46,9 +46,12 @@ add wave -radix bin   sim:/tb_fnd_driver/fsm_state
 add wave -radix bin   sim:/tb_fnd_driver/mask_enable
 add wave -radix uns   sim:/tb_fnd_driver/input_count
 add wave -radix hex   sim:/tb_fnd_driver/digit_data
+add wave -radix uns   sim:/tb_fnd_driver/fail_count
+add wave -radix bin   sim:/tb_fnd_driver/lockout
 add wave -divider "Outputs (FND pins)"
 add wave -radix bin   sim:/tb_fnd_driver/fnd_seg
 add wave -radix bin   sim:/tb_fnd_driver/fnd_com
+add wave -radix bin   sim:/tb_fnd_driver/fnd1_seg
 add wave -divider "Internal"
 add wave -radix bin   sim:/tb_fnd_driver/DUT/s_scan_tick
 add wave -radix bin   sim:/tb_fnd_driver/DUT/s_blink_tick
