@@ -6,11 +6,11 @@
 #   Verify every PIN number against the board manual before compiling.
 #   For standalone board demo, set TOP_LEVEL_ENTITY to top_standalone
 #   (it only needs clk, reset_n, fnd_seg, fnd_com, fnd1_seg).
-#   The 5-second input lockout is self-contained inside fnd_driver
-#   (internal timer, triggered when fail_count reaches 3), so no
-#   external lockout signal/pin is needed.
-#   fail_count[3:0] is the only integration input: drive it from the
-#   password-compare module (it already counts fails for the buzzer).
+#   The 5-second lock DISPLAY is self-contained inside fnd_driver
+#   (internal timer): when the lock input rises (= FSM alarm_on, 3 wrong)
+#   the 4-digit array shows "----" and the 1-digit FND shows "-" for 5s.
+#   lock is the only integration input: drive it from the FSM alarm_on
+#   (the same signal that already locks input and drives the buzzer).
 # =============================================================================
 
 # --- Device ------------------------------------------------------------------
@@ -77,5 +77,5 @@ set_location_assignment PIN_71  -to fnd1_seg[0]  ;# dp
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fnd1_seg[*]
 
 # --- Integration-only input (no board pin) -----------------------------------
-# fail_count[3:0] : from password compare module (jeong yong-seong).
+# lock : from FSM alarm_on (3-wrong lock state).
 # Wired module-to-module inside the team top, not to an FPGA pin.

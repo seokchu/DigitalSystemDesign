@@ -3,8 +3,7 @@ module fnd_team_adapter (
     input  wire        rst,
     input  wire [2:0]  state,
     input  wire [3:0]  input_count_led,
-    input  wire [15:0] digit_data,
-    input  wire [3:0]  fail_count,
+    input  wire        alarm_on,
     output wire [7:0]  fnd_seg,
     output wire [3:0]  fnd_com,
     output wire [7:0]  fnd1_seg
@@ -26,10 +25,10 @@ module fnd_team_adapter (
         .clk         (clk),
         .reset_n     (reset_n_int),
         .fsm_state   (state),
-        .mask_enable (1'b0),
+        .mask_enable (1'b1),
         .input_count (input_count_int),
-        .digit_data  (digit_data),
-        .fail_count  (fail_count),
+        .digit_data  (16'h0000),
+        .lock        (alarm_on),
         .fnd_seg     (fnd_seg),
         .fnd_com     (fnd_com),
         .fnd1_seg    (fnd1_seg)

@@ -9,13 +9,14 @@ module fnd_driver #(
     input  wire        mask_enable,
     input  wire [2:0]  input_count,
     input  wire [15:0] digit_data,
-    input  wire [3:0]  fail_count,
+    input  wire        lock,
     output wire [7:0]  fnd_seg,
     output wire [3:0]  fnd_com,
     output wire [7:0]  fnd1_seg
 );
 
-    localparam [3:0] C_DASH = 4'b1011;
+    localparam [3:0] C_DASH  = 4'b1011;
+    localparam [3:0] C_BLANK = 4'b1100;
 
     wire        s_scan_tick;
     wire        s_blink_tick;
@@ -25,19 +26,18 @@ module fnd_driver #(
 
     reg         lock_active;
     reg  [31:0] lock_cnt;
-    reg         fail3_d;
-    wire        fail3_now  = (fail_count == 4'd3);
-    wire        fail3_rise = fail3_now & ~fail3_d;
+    reg         lock_d;
+    wire        lock_rise = lock & ~lock_d;
 
     always @(posedge clk or negedge reset_n) begin
         if (!reset_n) begin
             lock_active <= 1'b0;
             lock_cnt    <= 32'd0;
-            fail3_d     <= 1'b0;
+            lock_d      <= 1'b0;
         end else begin
-            fail3_d <= fail3_now;
+            lock_d <= lock;
             if (!lock_active) begin
-                if (fail3_rise) begin
+                if (lock_rise) begin
                     lock_active <= 1'b1;
                     lock_cnt    <= 32'd0;
                 end
@@ -95,10 +95,10 @@ module fnd_driver #(
         .seg_out  (fnd_seg)
     );
 
-    wire [3:0] s_fail_code = (fail_count == 4'd1 || fail_count == 4'd2) ? fail_count : C_DASH;
+    wire [3:0] s_fnd1_code = lock_active ? C_DASH : C_BLANK;
 
     seg7_decoder U_DEC1 (
-        .digit_in (s_fail_code),
+        .digit_in (s_fnd1_code),
         .seg_out  (fnd1_seg)
     );
 

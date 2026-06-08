@@ -11,7 +11,7 @@ module tb_fnd_driver;
     reg         mask_enable = 1'b0;
     reg  [2:0]  input_count = 3'b000;
     reg  [15:0] digit_data  = 16'h1234;
-    reg  [3:0]  fail_count  = 4'd0;
+    reg         lock        = 1'b0;
     wire [7:0]  fnd_seg;
     wire [3:0]  fnd_com;
     wire [7:0]  fnd1_seg;
@@ -30,7 +30,7 @@ module tb_fnd_driver;
         .mask_enable (mask_enable),
         .input_count (input_count),
         .digit_data  (digit_data),
-        .fail_count  (fail_count),
+        .lock        (lock),
         .fnd_seg     (fnd_seg),
         .fnd_com     (fnd_com),
         .fnd1_seg    (fnd1_seg)
@@ -54,32 +54,27 @@ module tb_fnd_driver;
         fsm_state = 3'b010;
         #50000;
 
-        fsm_state   = 3'b001;
-        input_count = 3'd0;
-        fail_count  = 4'd1;
-        #20000;
-        fail_count  = 4'd2;
-        #20000;
-
-        fail_count  = 4'd3;
+        fsm_state = 3'b100;
+        lock      = 1'b1;
+        #2000;
+        lock      = 1'b0;
         #5000;
         if (DUT.lock_active !== 1'b1) begin
-            $display("FAIL: lockout did not assert when fail_count==3");
+            $display("FAIL: lock display did not assert on lock pulse");
             fail_cnt = fail_cnt + 1;
         end
 
         #(CLK_PERIOD*(LOCKC+10));
         if (DUT.lock_active !== 1'b0) begin
-            $display("FAIL: lockout did not clear after LOCK_CYCLES");
+            $display("FAIL: lock display did not clear after LOCK_CYCLES");
             fail_cnt = fail_cnt + 1;
         end
 
-        fsm_state  = 3'b011;
-        fail_count = 4'd0;
+        fsm_state = 3'b011;
         #50000;
 
         if (fail_cnt == 0)
-            $display("==== tb_fnd_driver PASS : internal 5-sec lockout ok ====");
+            $display("==== tb_fnd_driver PASS : 5-sec lock display ok ====");
         else
             $display("==== tb_fnd_driver FAIL : %0d mismatches ====", fail_cnt);
 
