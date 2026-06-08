@@ -1,6 +1,7 @@
 module fnd_driver #(
-    parameter integer SCAN_DIV  = 1,
-    parameter integer BLINK_DIV = 100
+    parameter integer SCAN_DIV    = 1,
+    parameter integer BLINK_DIV   = 100,
+    parameter integer LOCK_CYCLES = 5000
 ) (
     input  wire        clk,
     input  wire        reset_n,
@@ -9,7 +10,6 @@ module fnd_driver #(
     input  wire [2:0]  input_count,
     input  wire [15:0] digit_data,
     input  wire [3:0]  fail_count,
-    input  wire        lockout,
     output wire [7:0]  fnd_seg,
     output wire [3:0]  fnd_com,
     output wire [7:0]  fnd1_seg
@@ -22,6 +22,35 @@ module fnd_driver #(
     wire [1:0]  s_digit_sel;
     wire [15:0] s_disp_digits;
     reg  [3:0]  s_cur_digit;
+
+    reg         lock_active;
+    reg  [31:0] lock_cnt;
+    reg         fail3_d;
+    wire        fail3_now  = (fail_count == 4'd3);
+    wire        fail3_rise = fail3_now & ~fail3_d;
+
+    always @(posedge clk or negedge reset_n) begin
+        if (!reset_n) begin
+            lock_active <= 1'b0;
+            lock_cnt    <= 32'd0;
+            fail3_d     <= 1'b0;
+        end else begin
+            fail3_d <= fail3_now;
+            if (!lock_active) begin
+                if (fail3_rise) begin
+                    lock_active <= 1'b1;
+                    lock_cnt    <= 32'd0;
+                end
+            end else begin
+                if (lock_cnt == (LOCK_CYCLES - 1)) begin
+                    lock_active <= 1'b0;
+                    lock_cnt    <= 32'd0;
+                end else begin
+                    lock_cnt <= lock_cnt + 32'd1;
+                end
+            end
+        end
+    end
 
     clk_divider #(
         .SCAN_DIV  (SCAN_DIV),
@@ -47,7 +76,7 @@ module fnd_driver #(
         .input_count (input_count),
         .digit_data  (digit_data),
         .blink_tick  (s_blink_tick),
-        .lockout     (lockout),
+        .lockout     (lock_active),
         .disp_digits (s_disp_digits)
     );
 
@@ -66,7 +95,7 @@ module fnd_driver #(
         .seg_out  (fnd_seg)
     );
 
-    wire [3:0] s_fail_code = (fail_count == 4'd0) ? C_DASH : fail_count;
+    wire [3:0] s_fail_code = (fail_count == 4'd1 || fail_count == 4'd2) ? fail_count : C_DASH;
 
     seg7_decoder U_DEC1 (
         .digit_in (s_fail_code),

@@ -6,8 +6,11 @@
 #   Verify every PIN number against the board manual before compiling.
 #   For standalone board demo, set TOP_LEVEL_ENTITY to top_standalone
 #   (it only needs clk, reset_n, fnd_seg, fnd_com, fnd1_seg).
-#   fail_count / lockout are internal signals driven by other team
-#   modules at integration time, so they need no pins there.
+#   The 5-second input lockout is self-contained inside fnd_driver
+#   (internal timer, triggered when fail_count reaches 3), so no
+#   external lockout signal/pin is needed.
+#   fail_count[3:0] is the only integration input: drive it from the
+#   password-compare module (it already counts fails for the buzzer).
 # =============================================================================
 
 # --- Device ------------------------------------------------------------------
@@ -73,7 +76,6 @@ set_location_assignment PIN_70  -to fnd1_seg[1]  ;# g
 set_location_assignment PIN_71  -to fnd1_seg[0]  ;# dp
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to fnd1_seg[*]
 
-# --- Integration-only inputs (no board pins) ---------------------------------
-# fail_count[3:0] : from password compare module (jeong yong-seong)
-# lockout         : from 5-sec lockout timer (see local handoff folder)
-# These are wired module-to-module inside the team top, not to FPGA pins.
+# --- Integration-only input (no board pin) -----------------------------------
+# fail_count[3:0] : from password compare module (jeong yong-seong).
+# Wired module-to-module inside the team top, not to an FPGA pin.
