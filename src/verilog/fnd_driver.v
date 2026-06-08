@@ -95,7 +95,7 @@ module fnd_driver #(
         .seg_out  (fnd_seg)
     );
 
-    wire [3:0] s_fnd1_code = lock_active ? C_DASH : C_BLANK;
+    wire [3:0] s_fnd1_code = C_DASH;
 
     seg7_decoder U_DEC1 (
         .digit_in (s_fnd1_code),
